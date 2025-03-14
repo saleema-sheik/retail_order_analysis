@@ -1,0 +1,386 @@
+import streamlit as st
+import pandas as pd
+import pymysql
+
+# Set the title and header
+st.title('PROJECT-1')
+st.markdown(
+    """
+    <div style="display: flex; align-items: center;">
+        <div class="header-title">Retail Order Analysis</div>
+        <div style="font-size: 32px;">🛒</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)   
+
+
+# Database connection
+def get_data(query, columns):
+    df = pd.read_sql_query(query, myconnection)
+    return df if not df.empty else None
+
+myconnection = pymysql.connect(host='localhost', user='root', passwd='sihaan', database="retail_order")
+cursor = myconnection.cursor()
+
+st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(135deg, #1e3c72, #2a5298); /* Gradient background */
+        font-family: 'Roboto', sans-serif; /* Modern font */
+        color: #ffffff; /* White text for contrast */
+    }
+    .header-title {
+        color: #FFD700; /* Gold text for header */
+        text-align: center;
+        font-size: 48px;
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4); /* Subtle shadow for effect */
+    }
+    .question-box {
+        color: #ffffff; /* White text for question box */
+        font-size: 20px;
+        font-weight: bold;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.4); /* Transparent background for contrast */
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+        margin: 15px 0;
+    }
+    .question-box:hover {
+        background: rgba(255, 255, 255, 0.2); /* Hover effect */
+        transition: 0.3s ease-in-out; /* Smooth transition */
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
+#st.markdown('<div class="header-title">Real-time MySQL Database Queries</div>', unsafe_allow_html=True)
+# Sidebar navigation
+r = st.sidebar.radio('Navigation', ['About Project', 'Assigned queries', 'Self written'])
+
+# **About Project Section**
+if r == "About Project":
+    st.image("C:/Users/Admin/Downloads/pic2.jpg", width=500)
+    st.header("About the Project")
+    st.write("""
+        This project demonstrates the real-time querying of a MySQL database using Streamlit. It provides:
+        - **Assigned Queries**: Predefined queries related to business analytics and insights.
+        - **Self written Queries**: Custom queries for exploring the dataset.
+
+        **Technologies Used**:
+        - **Streamlit**: For building the interactive web application.
+        - **MySQL**: For database management and querying.
+        - **Pandas**: For data manipulation and presentation.
+
+        **Features**:
+        - Dynamic query selection using dropdowns.
+        - Stylish presentation with a user-friendly interface.
+        - Real-time fetching of query results.
+
+        Explore the tabs on the left to get started!
+    """)
+
+# **Assigned Queries Section**
+elif r == "Assigned queries":
+    st.header("Assigned Queries")
+
+    # List of assigned queries
+    questions = [
+        {"Question": "1. Find top 10 highest revenue generating products",
+         "query": '''
+            SELECT product_id, SUM(sale_price) AS sales
+            FROM order2
+            GROUP BY product_id
+            ORDER BY sales DESC
+            LIMIT 10;
+         ''',
+         "columns": ["Product ID", "Sales"]
+     },
+
+        {"Question": "2. Find the top 5 cities with the highest profit margins",
+         "query": '''
+            SELECT order1.city,
+                   SUM(order2.profit) / SUM(order2.sale_price) AS profit_margin
+            FROM order1 
+            JOIN order2 ON order1.order_id = order2.order_id
+            GROUP BY order1.city
+            ORDER BY profit_margin DESC
+            LIMIT 5;
+         ''',
+         "columns": ["City", "Profit Margin"]
+        },
+{"Question": "3. Calculate the total discount given for each category",
+     "query": '''
+        SELECT order1.category,
+               SUM(order2.discount) AS total_discount
+        FROM order1 
+        JOIN order2 ON order1.order_id = order2.order_id
+        GROUP BY order1.category
+        ORDER BY total_discount DESC;
+     ''',
+     "columns": ["Category", "Total Discount"]
+    },
+
+    {"Question": "4. Find the average sale price per product category",
+     "query": '''
+        SELECT sub_category,
+               AVG(sale_price) AS average_sale_price
+        FROM order2 
+        GROUP BY sub_category
+        ORDER BY average_sale_price DESC;
+     ''',
+     "columns": ["Sub Category", "Average Sale Price"]
+    },
+
+    {"Question": "5. Find the region with the highest average sale price",
+     "query": '''
+        SELECT order1.region,
+               AVG(order2.sale_price) AS average_sale_price
+        FROM order1 
+        JOIN order2 ON order1.order_id = order2.order_id
+        GROUP BY order1.region
+        ORDER BY average_sale_price DESC;
+     ''',
+     "columns": ["Region", "Average Sale Price"]
+    },
+
+    {"Question": "6. Find the total profit per category",
+     "query": '''
+        SELECT order1.category,
+               SUM(order2.profit * order2.quantity) AS total_profit
+        FROM order1 
+        JOIN order2 ON order1.order_id = order2.order_id
+        GROUP BY order1.category
+        ORDER BY total_profit DESC;
+     ''',
+     "columns": ["Category", "Total Profit"]
+    },
+
+    {"Question": "7. Identify the top 3 segments with the highest quantity of orders",
+     "query": '''
+        SELECT order1.segment,
+               SUM(order2.quantity) AS highest_quantity
+        FROM order1 
+        JOIN order2 ON order1.order_id = order2.order_id
+        GROUP BY order1.segment
+        ORDER BY highest_quantity DESC
+        LIMIT 3;
+     ''',
+     "columns": ["Segment", "Highest Quantity"]
+    },
+
+    {"Question": "8. Determine the average discount percentage given per region",
+     "query": '''
+        SELECT order1.region,
+               AVG(order2.discount_percent) AS average_discount_percentage
+        FROM order1 
+        JOIN order2 ON order1.order_id = order2.order_id
+        GROUP BY order1.region
+        ORDER BY average_discount_percentage DESC;
+     ''',
+     "columns": ["Region", "Average Discount Percentage"]
+    },
+
+    {"Question": "9. Find the product category with the highest total profit",
+     "query": '''
+        SELECT sub_category,
+               SUM(profit * quantity) AS total_profit
+        FROM order2 
+        GROUP BY sub_category 
+        ORDER BY total_profit DESC;
+     ''',
+     "columns": ["Sub Category", "Total Profit"]
+    },
+
+    {"Question": "10. Calculate the total revenue generated per year",
+     "query": '''
+        SELECT YEAR(order1.order_date) AS order_year,
+               SUM(order2.sale_price * order2.quantity) AS total_revenue
+        FROM order1 
+        JOIN order2 ON order1.order_id = order2.order_id
+        GROUP BY order_year
+        ORDER BY order_year;
+     ''',
+     "columns": ["Order Year", "Total Revenue"]
+    }
+    ]
+
+    # Dropdown for selecting queries
+    selected_question = st.selectbox("Select a Query", [q["Question"] for q in questions], key="queries")
+
+    # Fetch and display data
+    for q in questions:
+        if q["Question"] == selected_question:
+            df = get_data(q["query"], q["columns"])
+            st.write(df)
+
+# **Self Written Queries Section**
+elif r == "Self written":
+    st.header("Self Written Queries")
+
+    custom_questions = [
+        {"Question": "11. Calculate the Total Number of Orders per City",
+         "query": '''
+            SELECT 
+                order1.city,
+                COUNT(DISTINCT order1.order_id) AS total_orders
+            FROM 
+                order1 
+            GROUP BY 
+                order1.city
+            ORDER BY 
+                total_orders DESC;
+         ''',
+         "columns": ["City", "Total Orders"]
+        },
+
+        {"Question": "12. Calculate the total discount per state",
+         "query": '''
+            SELECT 
+                order1.state,
+                SUM(order2.discount) AS total_discount
+            FROM 
+                order1 
+            JOIN 
+                order2 ON order1.order_id = order2.order_id
+            GROUP BY 
+                order1.state
+            ORDER BY 
+                total_discount DESC;
+         ''',
+         "columns": ["State", "Total Discount"]
+        },
+{"Question": "13.List the Top 3 Cities with the Highest Total Sales",
+"query":'''SELECT 
+    order1.city,
+    SUM(order2.sale_price * order2.quantity) AS total_sales
+FROM 
+    order1 
+JOIN 
+    order2  ON order1.order_id = order2.order_id
+GROUP BY 
+    order1.city
+ORDER BY 
+    total_sales DESC
+LIMIT 3;''',
+"columns":["city", "total_sales"]},
+
+{"Question": "14.Determine the Number of Unique Products Sold per Region",
+"query":'''
+SELECT 
+    order1.region,
+    COUNT(DISTINCT order2.product_id) AS unique_products_sold
+FROM 
+    order1 
+JOIN 
+    order2  ON order1.order_id = order2.order_id
+GROUP BY 
+    order1.region;
+''',
+"columns":["Region", "unique_products_sold"]},
+
+{"Question": "15.Determine total profit for each year",
+"query":'''
+SELECT 
+     YEAR(order1.order_date) AS order_year,
+     sum(order2.profit) AS total_profit
+FROM 
+    order1
+JOIN
+    order2 ON order1.order_id = order2.order_id
+GROUP BY
+    order_year;
+''',
+"columns":["order_year", "total_profit"]},
+
+{"Question": "16.Average Order Value per Shipping Mode",
+"query":'''
+SELECT 
+     order1.ship_mode, AVG(order2.sale_price * order2.quantity) AS average_order_value
+FROM 
+    order1 
+JOIN 
+    order2 ON order1.order_id = order2.order_id
+GROUP BY 
+     order1.ship_mode
+ORDER BY 
+      average_order_value DESC;
+''',
+"columns":["ship_mode", "average_order_value"]},
+
+{"Question": "17.Total Quantity Sold per State",
+"query":'''
+SELECT 
+     order1.state, SUM(order2.quantity) AS total_quantity_sold
+FROM 
+     order1
+JOIN 
+     order2 ON order1.order_id = order2.order_id
+GROUP BY 
+     order1.state
+ORDER BY 
+     total_quantity_sold DESC;
+
+''',
+"columns":["state", "total_quantity_sold"]},
+
+{"Question": "18.Top 5 Sub-Categories by Profit",
+"query":'''
+SELECT 
+     order2.sub_category, SUM(order2.profit) AS total_profit
+FROM 
+     order2
+GROUP BY 
+     order2.sub_category
+ORDER BY 
+      total_profit DESC
+LIMIT 5;
+
+''',
+"columns":["sub_category", "total_profit"]},
+
+{"Question": "19.Monthly Sales Trend for a Specific Year",
+"query":'''
+SELECT 
+     MONTH(order1.order_date) AS month, SUM(order2.sale_price * order2.quantity) AS monthly_sales
+FROM 
+     order1 
+JOIN 
+     order2 ON order1.order_id = order2.order_id
+WHERE 
+     YEAR(order1.order_date) = 2023
+GROUP BY 
+     MONTH(order1.order_date)
+ORDER BY 
+      month;
+
+''',
+"columns":["month", "monthly_sales_2023"]},
+
+{"Question": "20.Total Sales Revenue per Region",
+"query":'''
+SELECT 
+     order1.region, SUM(order2.sale_price * order2.quantity) AS total_revenue
+FROM 
+    order1 
+JOIN
+    order2 ON order1.order_id = order2.order_id
+GROUP BY
+    order1.region
+ORDER BY 
+    total_revenue DESC;
+
+''',
+"columns":["region", "total_revenue"]}
+    ]
+
+    # Dropdown for selecting queries
+    selected_custom_question = st.selectbox("Select a Query", [q["Question"] for q in custom_questions], key="self_written_queries")
+
+    # Fetch and display data
+    for q in custom_questions:
+        if q["Question"] == selected_custom_question:
+            df = get_data(q["query"], q["columns"])
+            st.write(df)
